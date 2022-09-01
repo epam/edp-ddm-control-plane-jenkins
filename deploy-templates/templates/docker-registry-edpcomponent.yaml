@@ -1,0 +1,11 @@
+apiVersion: v1.edp.epam.com/v1alpha1
+kind: EDPComponent
+metadata:
+  name: docker-registry
+  labels:
+    {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
+spec:
+  icon: stub-value
+  type: docker-registry
+  url: {{ .Values.global.imageRegistry }}
+  visible: false

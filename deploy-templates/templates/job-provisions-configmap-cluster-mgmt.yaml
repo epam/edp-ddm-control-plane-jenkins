@@ -1,0 +1,53 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ .Values.jenkins.clusterMgmtJobProvisionerName }}
+data:
+  context: |
+    import groovy.json.*
+    import jenkins.model.Jenkins
+    import javaposse.jobdsl.plugin.*
+    import com.cloudbees.hudson.plugins.folder.*
+    import hudson.model.*
+    import java.util.zip.GZIPInputStream
+    import java.util.zip.GZIPOutputStream
+
+    def unzip(String compressed) {
+      def inflaterStream = new GZIPInputStream(new ByteArrayInputStream(compressed.decodeBase64()))
+      def uncompressedStr = inflaterStream.getText('UTF-8')
+      return uncompressedStr
+    }
+
+    def scriptText = new String(Base64.decoder.decode('{{ .Files.Get "JobProvisionerClusterMgmt.groovy" | b64enc }}'))
+    def jobName = "cluster-mgmt"
+    def folderName = "job-provisions"
+    def ciFolderName = "ci"
+    def folder = Jenkins.instance.getItem(folderName)
+    if (folder == null) {
+      folder = Jenkins.instance.createProject(Folder.class, folderName)
+    }
+    def ciFolder = folder.getItem(ciFolderName)
+    if (ciFolder == null) {
+      ciFolder = folder.createProject(Folder.class, ciFolderName)
+    }
+    def project = ciFolder.getItem(jobName)
+    if (project == null) {
+      project = ciFolder.createProject(FreeStyleProject, jobName)
+    }
+    project.getBuildersList().clear()
+    executeDslScripts = new ExecuteDslScripts()
+    executeDslScripts.setScriptText(scriptText)
+    project.getBuildersList().add(executeDslScripts)
+    def definitionList = [new StringParameterDefinition("NAME", ""),
+    new StringParameterDefinition("TYPE", ""),
+    new StringParameterDefinition("BUILD_TOOL", ""),
+    new StringParameterDefinition("BRANCH", ""),
+    new StringParameterDefinition("GIT_SERVER_CR_NAME", ""),
+    new StringParameterDefinition("GIT_SERVER_CR_VERSION", ""),
+    new StringParameterDefinition("GIT_CREDENTIALS_ID", ""),
+    new StringParameterDefinition("REPOSITORY_PATH", ""),
+    new StringParameterDefinition("JIRA_INTEGRATION_ENABLED", "")]
+
+    project.addProperty(new ParametersDefinitionProperty(definitionList))
+    project.setConcurrentBuild(true)
+    project.save()

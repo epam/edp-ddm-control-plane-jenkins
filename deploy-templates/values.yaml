@@ -1,0 +1,54 @@
+name: jenkins-operator
+operator:
+  image:
+    name: epamedp/jenkins-operator
+    version: 2.11.0-MDTU-DDM-SNAPSHOT.4
+  serviceAccountName: jenkins-operator
+  clusterRoleName: jenkins-operator-clusterrole
+
+
+global:
+  edpName: mdtu-ddm-edp-cicd-control-plane-dev
+  platform: openshift
+
+
+jenkins:
+  clusterRoleName: jenkins-clusterrole
+  serviceAccountName: jenkins
+  initImage:
+    name: busybox
+  image:
+    name: epamedp/edp-jenkins
+    version: 2.7.0
+  storage:
+    size: 10Gi
+  sharedLibraries:
+    - name: edp-library-stages
+      url: ssh://jenkins@gerrit:31000/libraries/edp-library-stages-fork.git
+      tag: 'master'
+      secret: gerrit-ciuser-sshkey
+      type: ssh
+    - name: edp-library-pipelines
+      url: ssh://jenkins@gerrit:31000/libraries/edp-library-pipelines-fork.git
+      tag: 'master'
+      secret: gerrit-ciuser-sshkey
+      type: ssh
+  registryRegulationsJobProvisionerName: registry-regulations
+  defaultJobProvisionerName: jenkins-job-provisions-ci
+  clusterMgmtJobProvisionerName: jenkins-job-provisions-cluster-mgmt
+  datapipelinesJobProvisionerName: data-pipelines
+  scriptApprovalConfigMapName: jenkins-config-script-approval
+
+keycloak:
+  clientName: jenkins-deployer
+  secretName: jenkins-keycloak-client
+  realm: admin
+
+keycloakIntegration:
+  enabled: true
+  realm: admin
+
+monitoring:
+  namespace: openshift-monitoring
+  roleName: jenkins-monitoring-role
+

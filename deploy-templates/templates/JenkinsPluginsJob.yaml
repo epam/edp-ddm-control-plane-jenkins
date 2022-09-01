@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+  name: jenkins-plugins-install
+  namespace: {{ .Values.namespace }}
+spec:
+  selector: {}
+  template:
+    metadata:
+      name: jenkins-plugins-install
+    spec:
+     restartPolicy: Never
+     containers:
+      - name: 'jenkins-install-plugin'
+        image: 'quay.io/openshift/origin-cli:latest'
+        command: ["sh"]
+        args:
+        - '-c'
+        - >-
+          while [[ `curl -s -u ${username}:${password}
+          http://jenkins:8080/api/xml?xpath=*/mode | grep "NORMAL"` == "" ]]; do
+          echo "Waiting for jenkins to deploy plugin, sleeping 5 sec"; sleep 5;
+          done && echo "Deploying ssh-agent plugin"; curl -s -XPOST -u
+          ${username}:${password}
+          http://jenkins:8080/pluginManager/installNecessaryPlugins -d '<install
+          plugin="ssh-agent@current" />'
+        envFrom:
+          - secretRef:
+              name: jenkins-admin-token

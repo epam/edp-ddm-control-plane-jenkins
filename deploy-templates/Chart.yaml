@@ -1,0 +1,4 @@
+apiVersion: v2
+description: Helmfile chart for jenkins-operator
+name: jenkins-operator
+version: 1.1.0

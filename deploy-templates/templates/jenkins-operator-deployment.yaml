@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+  {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  name: {{ .Values.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        name: {{ .Values.name }}
+      annotations:
+        sidecar.istio.io/inject: "false"        
+    spec:
+      serviceAccountName: {{ .Values.operator.serviceAccountName }}
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ template "imageRegistry" . }}{{ .Values.operator.image.name }}:{{ .Values.operator.image.version | default .Chart.AppVersion }}
+          command:
+            - {{ .Values.name }}
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "{{ .Values.name }}"
+            - name: PLATFORM_TYPE
+              value: {{ .Values.global.platform }}
+          {{- with .Values.resources }}
+          resources:
+      {{ toYaml . | indent 12 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+      {{- toYaml . | nindent 8 }}
+  {{- end }}

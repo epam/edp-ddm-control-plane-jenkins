@@ -1,0 +1,15 @@
+{{- range .Values.jenkins.sharedLibraries }}
+{{- if .secret }}
+kind: JenkinsServiceAccount
+apiVersion: v2.edp.epam.com/v1alpha1
+metadata:
+  name: {{ toYaml .name }}-{{ toYaml .secret }}
+  labels:
+  {{- include "jenkins-operator.metaLabels" $ | nindent 4 }}
+spec:
+  credentials: {{ toYaml .secret }}
+  ownerName: ""
+  type: {{ toYaml .type }}
+---
+{{- end }}
+{{- end }}

@@ -1,0 +1,16 @@
+{{- if not (lookup "rbac.authorization.k8s.io/v1beta1" "Role" .Values.monitoring.namespace .Values.monitoring.roleName) }}
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Values.monitoring.roleName }}
+  namespace: {{ .Values.monitoring.namespace }}
+  annotations:
+    "helm.sh/hook": "pre-install"
+rules:
+  - verbs:
+      - '*'
+    apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - servicemonitors
+{{- end -}}

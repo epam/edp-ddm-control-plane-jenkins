@@ -1,0 +1,22 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app: jenkins
+  {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
+  name: jenkins
+spec:
+  host: {{ template "jenkins-operator.jenkinsBaseUrl" . }}
+  path: /
+  port:
+    targetPort: 8080
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: jenkins
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress: []

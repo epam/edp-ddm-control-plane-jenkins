@@ -1,0 +1,17 @@
+{{- if not (lookup "rbac.authorization.k8s.io/v1beta1" "ClusterRole" "" "jenkins-scc-role") }}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jenkins-scc-role
+  annotations:
+    "helm.sh/hook": "pre-install"
+rules:
+  - verbs:
+      - get
+      - list
+      - update
+    apiGroups:
+      - '*'
+    resources:
+      - securitycontextconstraints
+{{- end -}}

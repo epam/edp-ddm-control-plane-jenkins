@@ -1,0 +1,20 @@
+apiVersion: v1.edp.epam.com/v1alpha1
+kind: KeycloakClient
+metadata:
+  name: jenkins
+  annotations:
+    "helm.sh/resource-policy": keep
+spec:
+  clientId: jenkins
+  public: true
+  directAccess: false
+  realmRoles:
+    - composite: administrator
+      name: jenkins-administrators
+    - composite: developer
+      name: jenkins-users
+  audRequired: false
+  secret: ''
+  advancedProtocolMappers: false
+  webUrl: {{ template "jenkins-operator.jenkinsUrl" . }}
+  targetRealm: {{ template "keycloak.realm" . }}

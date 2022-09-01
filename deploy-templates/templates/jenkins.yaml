@@ -1,0 +1,41 @@
+apiVersion: v2.edp.epam.com/v1alpha1
+kind: Jenkins
+metadata:
+  name: jenkins
+  annotations:
+    edp.epam.com/admin-token: jenkins-admin-token
+  labels:
+  {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
+spec:
+  edpSpec:
+    dnsWildcard: {{ .Values.dnsWildcard }}
+    {{- if .Values.jenkins.imagePullSecrets}}
+    imagePullSecrets:
+      {{- range .Values.jenkins.imagePullSecrets }}
+      - {{ . -}}
+        {{- end -}}
+  {{ end }}
+  image: {{ template "imageRegistry" . }}{{ .Values.jenkins.image.name }}
+  version: {{ .Values.jenkins.image.version }}
+  initImage: {{ template "imageRegistry" . }}{{ .Values.jenkins.initImage.name }}
+  {{- if .Values.jenkins.basePath }}
+  basePath: "{{ .Values.jenkins.basePath }}"
+  {{- end }}
+  volumes:
+    - name: data
+      storageClass: {{ .Values.global.storageClass }}
+      capacity: {{ .Values.jenkins.storage.size }}
+  sharedLibraries:
+    {{- range .Values.jenkins.sharedLibraries }}
+    - name: {{ toYaml .name }}
+      url: {{ toYaml .url }}
+      tag: {{ toYaml .tag }}
+      {{- if .secret }}
+      secret: {{ toYaml .secret }}
+      type: {{ toYaml .type }}
+  {{- end }}
+  {{- end }}
+  keycloakSpec:
+    enabled: {{ .Values.keycloakIntegration.enabled }}
+    realm: {{ template "keycloak.realm" . }}
+    url: {{ template "jenkins-operator.jenkinsUrl" . }}
