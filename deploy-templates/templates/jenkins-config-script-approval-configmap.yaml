@@ -99,6 +99,7 @@ data:
         'staticMethod org.apache.commons.lang.RandomStringUtils random int boolean boolean',
         'staticMethod org.codehaus.groovy.runtime.EncodingGroovyMethods decodeBase64 java.lang.String',
         'staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toInteger',
+        'staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toInteger java.lang.Number',
       ]
 
     scriptList.each() { item ->
