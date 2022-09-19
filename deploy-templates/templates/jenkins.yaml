@@ -26,15 +26,22 @@ spec:
       storageClass: {{ .Values.global.storageClass }}
       capacity: {{ .Values.jenkins.storage.size }}
   sharedLibraries:
-    {{- range .Values.jenkins.sharedLibraries }}
-    - name: {{ toYaml .name }}
-      url: {{ toYaml .url }}
-      tag: {{ toYaml .tag }}
-      {{- if .secret }}
-      secret: {{ toYaml .secret }}
-      type: {{ toYaml .type }}
-  {{- end }}
-  {{- end }}
+    {{- $rootJenkins := .Values.jenkins -}}
+    {{- range $key, $value := .Values.jenkins.sharedLibraries }}
+    - name: {{ $key }}
+      url: {{ $value.url }}
+      {{- if and (eq $key "edp-library-stages") ($rootJenkins.edp_library_stages_version) }}
+      tag: {{ $rootJenkins.edp_library_stages_version }}
+      {{- else if and (eq $key "edp-library-pipelines") ($rootJenkins.edp_library_pipelines_version) }}
+      tag: {{ $rootJenkins.edp_library_pipelines_version }}
+      {{- else }}
+      tag: {{ $value.tag }}
+      {{- end }}
+      {{- if $value.secret }}
+      secret: {{ $value.secret }}
+      type: {{ $value.type }}
+    {{- end }}
+    {{- end }}
   keycloakSpec:
     enabled: {{ .Values.keycloakIntegration.enabled }}
     realm: {{ template "keycloak.realm" . }}

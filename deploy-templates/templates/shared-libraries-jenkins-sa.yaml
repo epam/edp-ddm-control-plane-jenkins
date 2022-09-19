@@ -1,15 +1,15 @@
-{{- range .Values.jenkins.sharedLibraries }}
-{{- if .secret }}
+{{- range $key, $value := .Values.jenkins.sharedLibraries }}
+{{- if $value.secret }}
 kind: JenkinsServiceAccount
 apiVersion: v2.edp.epam.com/v1alpha1
 metadata:
-  name: {{ toYaml .name }}-{{ toYaml .secret }}
+  name: {{ $key }}-{{ $value.secret }}
   labels:
   {{- include "jenkins-operator.metaLabels" $ | nindent 4 }}
 spec:
-  credentials: {{ toYaml .secret }}
+  credentials: {{ $value.secret }}
   ownerName: ""
-  type: {{ toYaml .type }}
+  type: {{ $value.type }}
 ---
 {{- end }}
 {{- end }}

@@ -23,12 +23,12 @@ jenkins:
   storage:
     size: 10Gi
   sharedLibraries:
-    - name: edp-library-stages
+    edp-library-stages:
       url: ssh://jenkins@gerrit:31000/libraries/edp-library-stages-fork.git
       tag: 'master'
       secret: gerrit-ciuser-sshkey
       type: ssh
-    - name: edp-library-pipelines
+    edp-library-pipelines:
       url: ssh://jenkins@gerrit:31000/libraries/edp-library-pipelines-fork.git
       tag: 'master'
       secret: gerrit-ciuser-sshkey
