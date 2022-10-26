@@ -100,6 +100,7 @@ data:
         'staticMethod org.codehaus.groovy.runtime.EncodingGroovyMethods decodeBase64 java.lang.String',
         'staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toInteger',
         'staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toInteger java.lang.Number',
+        'staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter unaryMinus java.lang.Object',
       ]
 
     scriptList.each() { item ->
