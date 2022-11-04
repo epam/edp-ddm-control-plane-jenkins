@@ -53,7 +53,7 @@ stages['Create-release'] = '[{"name": "checkout"},{"name": "create-branch"},{"na
 stages['Delete-release'] = '[{"name": "checkout"},{"name": "delete-registry"}]'
 stages['Delete-registry-group'] = '[{"name": "checkout"},{"name": "delete-registry-group"}]'
 
-stages['Create-registry-backup'] = '[{"name": "create-backup"}]'
+stages['Create-registry-backup'] = '[{"name": "checkout"},{"name": "create-backup"}]'
 stages['Restore-registry'] = '[{"name": "checkout"},{"name": "cleanup-registry-before-restore"},{"name": "restore-registry-bucket"}]'
 
 def buildToolsOutOfTheBox = ["maven","npm","gradle","dotnet","none","go","python"]
@@ -255,7 +255,6 @@ def createReleaseBackupPipeline(pipelineName, codebaseName, codebaseStages, repo
                     stringParam("GIT_SERVER_CR_VERSION", "${gitServerCrVersion}", "Version of GitServer CR Resource")
                     stringParam("GERRIT_PROJECT_NAME", "${codebaseName}", "Gerrit project name(Codebase name) to be build")
                     stringParam("BRANCH", "${watchBranch}", "Branch to build artifact from")
-                    stringParam("BACKUP_TYPE", "manual", "Backup time")
                 }
             }
         }
