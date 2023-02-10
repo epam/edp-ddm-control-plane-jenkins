@@ -108,10 +108,32 @@ if (BRANCH) {
             createReleaseDeletePipeline("Delete-release-${codebaseName}", codebaseName, stages["Delete-registry-group"],
                     repositoryPath, gitCredentialsId, branch, gitServerCrName, gitServerCrVersion, edpLibraryStagesVersion, edpLibraryPipelinesVersion)
         }
+
         // only needed for registry
+        Boolean isRegistryBackupEnabled = false
+        String schedule
+        //delete the folder of the previously downloaded registry
+        def rmProc = new ProcessBuilder( 'sh', '-c', "rm -rf /tmp/${codebaseName}").redirectErrorStream(true).start()
+        //wait for the command execution
+        rmProc.waitForOrKill(1000)
+        //clone registry repository
+        new ProcessBuilder( 'sh', '-c', "git clone ${repositoryPath} /tmp/${codebaseName}").redirectErrorStream(true).start().text
+        def grepProc = new ProcessBuilder( 'sh', '-c', "grep --after-context=3 registryBackup /tmp/${codebaseName}/deploy-templates/values.yaml > /tmp/${codebaseName}/deploy-templates/backup_values.yaml").redirectErrorStream(true).start()
+        grepProc.waitForOrKill(1000)
+        def backupValues = new File("/tmp/${codebaseName}/deploy-templates/backup_values.yaml").text
+        backupValues.split('\n').each {
+            it.contains('enabled') ? isRegistryBackupEnabled = it.split("enabled: ")[1].toBoolean() : false
+            (it.contains('schedule') && isRegistryBackupEnabled.toBoolean()) ? schedule = it.split("schedule: ")[1].replaceAll("\"", "") : ""
+        }
+
+        def rmBackupValuesProc = new ProcessBuilder( 'sh', '-c', "rm -rf /tmp/${codebaseName}/deploy-templates/backup_values.yaml").redirectErrorStream(true).start()
+        //wait for the command execution
+        rmBackupValuesProc.waitForOrKill(1000)
+
         if (type.equalsIgnoreCase('registry')) {
             createReleaseBackupPipeline("Create-registry-backup-${codebaseName}", codebaseName, stages["Create-registry-backup"],
-                    repositoryPath, gitCredentialsId, branch, gitServerCrName, gitServerCrVersion, edpLibraryStagesVersion, edpLibraryPipelinesVersion)
+                    repositoryPath, gitCredentialsId, branch, gitServerCrName, gitServerCrVersion, edpLibraryStagesVersion, edpLibraryPipelinesVersion,
+                    isRegistryBackupEnabled, schedule)
 
             createReleaseRestorePipeline("Restore-registry-${codebaseName}", codebaseName, stages["Restore-registry"],
                     repositoryPath, gitCredentialsId, branch, gitServerCrName, gitServerCrVersion, edpLibraryStagesVersion, edpLibraryPipelinesVersion)
@@ -239,11 +261,18 @@ def createReleaseDeletePipeline(pipelineName, codebaseName, codebaseStages, repo
     }
 }
 
-def createReleaseBackupPipeline(pipelineName, codebaseName, codebaseStages, repository, credId, watchBranch = "master", gitServerCrName, gitServerCrVersion, edpLibraryStagesVersion, edpLibraryPipelinesVersion) {
+def createReleaseBackupPipeline(pipelineName, codebaseName, codebaseStages, repository, credId, watchBranch = "master",
+                                gitServerCrName, gitServerCrVersion, edpLibraryStagesVersion, edpLibraryPipelinesVersion,
+                                isRegistryBackupEnabled, schedule) {
     pipelineJob("${codebaseName}/${pipelineName}") {
         logRotator {
             numToKeep(10)
             daysToKeep(7)
+        }
+        if (isRegistryBackupEnabled.toBoolean()) {
+            triggers {
+                cron(schedule)
+            }
         }
         definition {
             cps {
