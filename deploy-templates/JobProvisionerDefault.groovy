@@ -271,7 +271,7 @@ def createReleaseBackupPipeline(pipelineName, codebaseName, codebaseStages, repo
         }
         if (isRegistryBackupEnabled.toBoolean()) {
             triggers {
-                cron(schedule)
+                cron("TZ=Europe/Kiev\n" + schedule)
             }
         }
         definition {
