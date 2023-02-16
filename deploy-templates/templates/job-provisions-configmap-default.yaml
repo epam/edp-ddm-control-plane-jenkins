@@ -19,6 +19,7 @@ data:
     }
 
     def scriptText = new String(Base64.decoder.decode('{{ .Files.Get "JobProvisionerDefault.groovy" | b64enc }}'))
+
     def jobName = "default-" + "{{ .Values.jenkins.defaultJobProvisionerName }}".replaceAll('jenkins-job-provisions-ci-','')
     def folderName = "job-provisions"
     def ciFolderName = "ci"

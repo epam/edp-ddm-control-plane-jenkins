@@ -1,8 +1,8 @@
 name: jenkins-operator
 operator:
   image:
-    name: epamedp/jenkins-operator
-    version: 2.11.0-MDTU-DDM-SNAPSHOT.4
+    name: control-plane/jenkins-operator
+    version: 2.11.0-MDTU-DDM-SNAPSHOT.6
   serviceAccountName: jenkins-operator
   clusterRoleName: jenkins-operator-clusterrole
 
