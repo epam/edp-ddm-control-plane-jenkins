@@ -52,3 +52,8 @@ monitoring:
   namespace: openshift-monitoring
   roleName: jenkins-monitoring-role
 
+edpComponent:
+  description: "Програмний комплекс, що забезпечує автоматизацію в життєвому циклі Платформи та Реєстрів. Виконує фактичне розгортання Реєстру, конфігурування, оновлення та безліч інших автоматизованих задач в Платформі."
+  displayName: "Сервіс розгортання конфігурації (Jenkins)"
+  operationalZone: "platform-administration-zone"
+
