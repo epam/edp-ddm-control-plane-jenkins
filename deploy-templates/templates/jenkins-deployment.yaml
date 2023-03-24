@@ -28,6 +28,9 @@ spec:
         - name: jenkins-data
           persistentVolumeClaim:
             claimName: jenkins-data
+        - name: logging-properties
+          configMap:
+            name: jenkins-logging-properties
         - name: gerrit-ciuser-sshkey
           secret:
             secretName: gerrit-ciuser-sshkey
@@ -100,6 +103,9 @@ spec:
           volumeMounts:
             - name: jenkins-data
               mountPath: /var/lib/jenkins
+            - name: logging-properties
+              mountPath: /var/lib/jenkins/logging.properties
+              subPath: logging.properties
           readinessProbe:
             httpGet:
               path: /login
