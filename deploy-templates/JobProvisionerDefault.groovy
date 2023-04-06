@@ -45,7 +45,7 @@ stages['Build-application-gitops'] = '[{"name": "checkout"},{"name": "deploy-via
 stages['Build-library-gitops'] = '[{"name": "checkout"},{"name": "deploy-via-helmfile"}]'
 stages['Build-autotests-gitops'] = '[{"name": "checkout"},{"name": "deploy-via-helmfile"}]'
 stages['Build-clustermgmt-gitops'] = '[{"name": "checkout"},{"name": "deploy-via-helmfile"}]'
-stages['Build-registry-gitops'] = '[{"name": "checkout"},{"name": "registry-integration"},{"name": "deploy-via-helmfile"}]'
+stages['Build-registry-gitops'] = '[{"name": "checkout"},{"name": "validating-values"},{"name": "registry-integration"},{"name": "deploy-via-helmfile"}]'
 stages['Build-registry-group-gitops'] = '[{"name": "checkout"},{"name": "deploy-registry-group"}]'
 
 

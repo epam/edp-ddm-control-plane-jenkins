@@ -15,7 +15,7 @@ stages['Code-review-default'] = '[{"name": "gerrit-checkout"}' + "${commitValida
 stages['Build-application-gitops'] = '[{"name": "checkout"},{"name": "deploy-via-helmfile"}]'
 stages['Build-library-gitops'] = '[{"name": "checkout"},{"name": "deploy-via-helmfile"}]'
 stages['Build-autotests-gitops'] = '[{"name": "checkout"},{"name": "deploy-via-helmfile"}]'
-stages['Build-clustermgmt-gitops'] = '[{"name": "checkout"},{"name": "deploy-via-helmfile"}]'
+stages['Build-clustermgmt-gitops'] = '[{"name": "checkout"},{"name": "validating-values"},{"name": "deploy-via-helmfile"}]'
 stages['Build-registry-gitops'] = '[{"name": "checkout"},{"name": "deploy-via-helmfile"}]'
 
 
