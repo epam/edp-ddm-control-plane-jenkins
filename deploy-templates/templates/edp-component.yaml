@@ -6,7 +6,7 @@ metadata:
     control-plane-console/display-name: {{ .Values.edpComponent.displayName }}
     control-plane-console/display-order: '2'
     control-plane-console/operational-zone: {{ .Values.edpComponent.operationalZone }}
-  name: jenkins-сhart
+  name: jenkins-chart
   namespace: {{ .Release.Namespace }}
 spec:
   icon: >-
