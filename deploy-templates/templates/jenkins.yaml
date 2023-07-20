@@ -1,4 +1,4 @@
-apiVersion: v2.edp.epam.com/v1alpha1
+apiVersion: v2.edp.epam.com/v1
 kind: Jenkins
 metadata:
   name: jenkins
@@ -9,27 +9,14 @@ metadata:
 spec:
   edpSpec:
     dnsWildcard: {{ .Values.dnsWildcard }}
-    {{- if .Values.jenkins.imagePullSecrets}}
-    imagePullSecrets:
-      {{- range .Values.jenkins.imagePullSecrets }}
-      - {{ . -}}
-        {{- end -}}
-  {{ end }}
-  image: {{ template "imageRegistry" . }}{{ .Values.jenkins.image.name }}
-  version: {{ .Values.jenkins.image.version }}
-  initImage: {{ template "imageRegistry" . }}{{ .Values.jenkins.initImage.name }}
   {{- if .Values.jenkins.basePath }}
   basePath: "{{ .Values.jenkins.basePath }}"
   {{- end }}
-  volumes:
-    - name: data
-      storageClass: {{ .Values.global.storageClass }}
-      capacity: {{ .Values.jenkins.storage.size }}
   sharedLibraries:
     {{- $rootJenkins := .Values.jenkins -}}
-    {{- range $key, $value := .Values.jenkins.sharedLibraries }}
+    {{- range $key, $value := $rootJenkins.sharedLibraries }}
     - name: {{ $key }}
-      url: {{ $value.url }}
+      url: {{ tpl $value.url $ }}
       {{- if and (eq $key "edp-library-stages") ($rootJenkins.edp_library_stages_version) }}
       tag: {{ $rootJenkins.edp_library_stages_version }}
       {{- else if and (eq $key "edp-library-pipelines") ($rootJenkins.edp_library_pipelines_version) }}
@@ -45,4 +32,3 @@ spec:
   keycloakSpec:
     enabled: {{ .Values.keycloakIntegration.enabled }}
     realm: {{ template "keycloak.realm" . }}
-    url: {{ template "jenkins-operator.jenkinsUrl" . }}

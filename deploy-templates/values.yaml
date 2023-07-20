@@ -2,15 +2,14 @@ name: jenkins-operator
 operator:
   image:
     name: control-plane/jenkins-operator
-    version: 2.11.0-MDTU-DDM-SNAPSHOT.6
+    version: 2.15.0
   serviceAccountName: jenkins-operator
   clusterRoleName: jenkins-operator-clusterrole
 
 
 global:
-  edpName: mdtu-ddm-edp-cicd-control-plane-dev
+  edpName: control-plane
   platform: openshift
-
 
 jenkins:
   logLevel: WARNING
@@ -25,12 +24,12 @@ jenkins:
     size: 10Gi
   sharedLibraries:
     edp-library-stages:
-      url: ssh://jenkins@gerrit:31000/libraries/edp-library-stages-fork.git
+      url: 'ssh://{{- template "gerrit.gitUser" (dict "root" $) }}@gerrit:31000/libraries/edp-library-stages-fork.git'
       tag: 'master'
       secret: gerrit-ciuser-sshkey
       type: ssh
     edp-library-pipelines:
-      url: ssh://jenkins@gerrit:31000/libraries/edp-library-pipelines-fork.git
+      url: 'ssh://{{- template "gerrit.gitUser" (dict "root" $) }}@gerrit:31000/libraries/edp-library-pipelines-fork.git'
       tag: 'master'
       secret: gerrit-ciuser-sshkey
       type: ssh
@@ -57,4 +56,3 @@ edpComponent:
   description: "Програмний комплекс, що забезпечує автоматизацію в життєвому циклі Платформи та Реєстрів. Виконує фактичне розгортання Реєстру, конфігурування, оновлення та безліч інших автоматизованих задач в Платформі."
   displayName: "Сервіс розгортання конфігурації (Jenkins)"
   operationalZone: "platform-administration-zone"
-

@@ -1,7 +1,7 @@
 {{- range $key, $value := .Values.jenkins.sharedLibraries }}
 {{- if $value.secret }}
 kind: JenkinsServiceAccount
-apiVersion: v2.edp.epam.com/v1alpha1
+apiVersion: v2.edp.epam.com/v1
 metadata:
   name: {{ $key }}-{{ $value.secret }}
   labels:

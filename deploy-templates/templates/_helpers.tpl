@@ -82,3 +82,9 @@ Selector labels
 app.kubernetes.io/name: {{ include "jenkins-operator.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{- define "gerrit.gitUser" -}}
+{{- $root := .root }}
+{{- $gitServer := (lookup "v2.edp.epam.com/v1alpha1" "GitServer" $root.Release.Namespace "gerrit") -}}
+{{- $gitServer.spec.gitUser }}
+{{- end }}
