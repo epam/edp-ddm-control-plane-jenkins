@@ -112,23 +112,64 @@ if (BRANCH) {
         // only needed for registry
         Boolean isRegistryBackupEnabled = false
         String schedule
+        String scriptPath = "/tmp/parse_yaml.sh"
+        String valuesFolderPath = "/tmp/${codebaseName}/deploy-templates"
+        String parsedValuesPath = "${valuesFolderPath}/parsed_values.yaml"
+
         //delete the folder of the previously downloaded registry
         def rmProc = new ProcessBuilder( 'sh', '-c', "rm -rf /tmp/${codebaseName}").redirectErrorStream(true).start()
         //wait for the command execution
         rmProc.waitForOrKill(1000)
         //clone registry repository
         new ProcessBuilder( 'sh', '-c', "git clone ${repositoryPath} /tmp/${codebaseName}").redirectErrorStream(true).start().text
-        def grepProc = new ProcessBuilder( 'sh', '-c', "grep --after-context=3 registryBackup /tmp/${codebaseName}/deploy-templates/values.yaml > /tmp/${codebaseName}/deploy-templates/backup_values.yaml").redirectErrorStream(true).start()
-        grepProc.waitForOrKill(1000)
-        def backupValues = new File("/tmp/${codebaseName}/deploy-templates/backup_values.yaml").text
-        backupValues.split('\n').each {
-            it.contains('enabled') ? isRegistryBackupEnabled = it.split("enabled: ")[1].toBoolean() : false
-            (it.contains('schedule') && isRegistryBackupEnabled.toBoolean()) ? schedule = it.split("schedule: ")[1].replaceAll("\"", "") : ""
-        }
-
-        def rmBackupValuesProc = new ProcessBuilder( 'sh', '-c', "rm -rf /tmp/${codebaseName}/deploy-templates/backup_values.yaml").redirectErrorStream(true).start()
+        //create the file for script
+        def createFileProc = new ProcessBuilder( 'sh', '-c', "touch ${scriptPath}").redirectErrorStream(true).start()
         //wait for the command execution
-        rmBackupValuesProc.waitForOrKill(1000)
+        createFileProc.waitForOrKill(1000)
+        //put the script into the created file
+        def putScriptProc = new ProcessBuilder( 'sh', '-c', "echo \"#!/bin/sh\n" +
+                "function parse_yaml {\n" +
+                "\tsed 's/  / /g' ${valuesFolderPath}/values.yaml > ${valuesFolderPath}/updated_values.yaml\n" +
+                "\tlocal prefix=\\\$2\n" +
+                "\tlocal s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=\\\$(echo @|tr @ '\\034')\n" +
+                "\tsed -ne \\\"s|,\\\$s\\]\\\$s\\\\\\\$|]|\\\" \\\\\n" +
+                "\t\t-e \\\":1;s|^\\(\\\$s\\)\\(\\\$w\\)\\\$s:\\\$s\\[\\\$s\\(.*\\)\\\$s,\\\$s\\(.*\\)\\\$s\\]|\\1\\2: [\\3]\\n\\1  - \\4|;t1\\\" \\\\\n" +
+                "\t\t-e \\\"s|^\\(\\\$s\\)\\(\\\$w\\)\\\$s:\\\$s\\[\\\$s\\(.*\\)\\\$s\\]|\\1\\2:\\n\\1  - \\3|;p\\\" \\\$1 | \\\\\n" +
+                "\tsed -ne \\\"s|,\\\$s}\\\$s\\\\\\\$|}|\\\" \\\\\n" +
+                "\t\t-e \\\":1;s|^\\(\\\$s\\)-\\\$s{\\\$s\\(.*\\)\\\$s,\\\$s\\(\\\$w\\)\\\$s:\\\$s\\(.*\\)\\\$s}|\\1- {\\2}\\n\\1  \\3: \\4|;t1\\\" \\\\\n" +
+                "\t\t-e \\\"s|^\\(\\\$s\\)-\\\$s{\\\$s\\(.*\\)\\\$s}|\\1-\\n\\1  \\2|;p\\\" | \\\\\n" +
+                "\tsed -ne \\\"s|^\\(\\\$s\\):|\\1|\\\" \\\\\n" +
+                "\t\t-e \\\"s|^\\(\\\$s\\)-\\\$s[\\\\\\\"']\\(.*\\)[\\\\\\\"']\\\$s\\\\\\\$|\\1\\\$fs\\\$fs\\2|p\\\" \\\\\n" +
+                "\t\t-e \\\"s|^\\(\\\$s\\)-\\\$s\\(.*\\)\\\$s\\\\\\\$|\\1\\\$fs\\\$fs\\2|p\\\" \\\\\n" +
+                "\t\t-e \\\"s|^\\(\\\$s\\)\\(\\\$w\\)\\\$s:\\\$s[\\\\\\\"']\\(.*\\)[\\\\\\\"']\\\$s\\\\\\\$|\\1\\\$fs\\2\\\$fs\\3|p\\\" \\\\\n" +
+                "\t\t-e \\\"s|^\\(\\\$s\\)\\(\\\$w\\)\\\$s:\\\$s\\(.*\\)\\\$s\\\\\\\$|\\1\\\$fs\\2\\\$fs\\3|p\\\" | \\\\\n" +
+                "\tawk -F\\\$fs '{\n" +
+                "\t\tindent = length(\\\$1)/2;\n" +
+                "\t\tvname[indent] = \\\$2;\n" +
+                "\t\tfor (i in vname) {if (i > indent) {delete vname[i]; idx[i]=0}}\n" +
+                "\t\tif(length(\\\$2)== 0) {vname[indent]= ++idx[indent]};\n" +
+                "\t\tif (length(\\\$3) > 0) {\n" +
+                "\t\t\tvn=\\\"\\\"; for (i=0; i<indent; i++) {vn=(vn)(vname[i])(\\\"_\\\")}\n" +
+                "\t\t\tprintf(\\\"%s%s%s=\\\\\\\"%s\\\\\\\"\\\\n\\\", \\\"'\\\$prefix'\\\",vn, vname[indent], \\\$3);\n" +
+                "\t\t}\n" +
+                "\t}'\n" +
+                "}\n" +
+                "parse_yaml ${valuesFolderPath}/updated_values.yaml > ${parsedValuesPath}\" > ${scriptPath}").redirectErrorStream(true).start()
+        putScriptProc.waitForOrKill(1000)
+        //make a script executable
+        def makeExecProc = new ProcessBuilder( 'sh', '-c', "chmod +x ${scriptPath}").redirectErrorStream(true).start()
+        makeExecProc.waitForOrKill(1000)
+        //run a script for yaml parsing
+        def runScriptProc = new ProcessBuilder( 'sh', '-c', ".${scriptPath}").redirectErrorStream(true).start()
+        runScriptProc.waitForOrKill(1000)
+        def valuesConfig = new ConfigSlurper().parse(new File("${parsedValuesPath}").toURL())
+        valuesConfig.each { key, value ->
+            key == 'global_registryBackup_enabled' ? isRegistryBackupEnabled = value.toBoolean() : false
+            (key == 'global_registryBackup_schedule' && isRegistryBackupEnabled) ? schedule = value : ""
+        }
+        //rm temp files
+        def rmBackupValuesFilesProc = new ProcessBuilder( 'sh', '-c', "rm -rf ${valuesFolderPath}/updated_values.yaml ${parsedValuesPath} ${scriptPath}").redirectErrorStream(true).start()
+        rmBackupValuesFilesProc.waitForOrKill(1000)
 
         if (type.equalsIgnoreCase('registry')) {
             createReleaseBackupPipeline("Create-registry-backup-${codebaseName}", codebaseName, stages["Create-registry-backup"],
