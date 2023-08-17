@@ -187,6 +187,8 @@ if (BRANCH) {
 
 def createCiPipeline(pipelineName, codebaseName, codebaseStages, makeAction, repository, credId, watchBranch = "master", gitServerCrName, gitServerCrVersion, edpLibraryStagesVersion, edpLibraryPipelinesVersion) {
     pipelineJob("${codebaseName}/${watchBranch.toUpperCase().replaceAll(/\//, "-")}-${pipelineName}") {
+        if(watchBranch == "master" && pipelineName.startsWith("Build"))
+            concurrentBuild(false)
         logRotator {
             numToKeep(10)
             daysToKeep(7)
